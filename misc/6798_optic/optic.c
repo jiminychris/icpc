@@ -3,17 +3,28 @@
 
 #define GRAPH_SIZE 26
 
-int reach(char graph[GRAPH_SIZE][GRAPH_SIZE], char start, char reached[])
+int reach(char graph[GRAPH_SIZE][GRAPH_SIZE], char start, unsigned int nri,
+          char reached[], unsigned int *numReached,
+          char notReached[], unsigned int *numNotReached)
 {
     int i, ct;
-    reached[start] = 1;
-    ct = 0;
-    for (i = 0; i < GRAPH_SIZE; ++i)
+    char end;
+
+    reached[(*numReached)++] = start;
+    notReached[nri] = notReached[--(*numNotReached)];
+    ct = i = 0;
+    while (i < *numNotReached)
     {
-        if (!reached[i] && graph[start][i])
+        end = notReached[i];
+        if (graph[start][end])
         {
             ct += 1;
-            ct += reach(graph, i, reached);
+            ct += reach(graph, end, i, reached, numReached,
+                notReached, numNotReached);
+        }
+        else
+        {
+            i += 1;
         }
     }
     return ct;
@@ -24,13 +35,14 @@ int main(int argc, char *argv[])
     unsigned int t, e, i, j, k, l;
     char f[9], a1, a2;
     char visibility[GRAPH_SIZE][GRAPH_SIZE];
-    char received[GRAPH_SIZE];
     char messageStore[50][103];
     unsigned int msc;
     char *messages[GRAPH_SIZE][50];
     unsigned int messageCount[GRAPH_SIZE];
     char receivers[GRAPH_SIZE];
     unsigned int receiverCount;
+    char nonReceivers[GRAPH_SIZE];
+    unsigned int nonReceiverCount;
     char sent;
 
     scanf("%u", &t);
@@ -67,12 +79,17 @@ int main(int argc, char *argv[])
                 messageStore[msc][k] = '\0';
 
                 for (k = 0; k < GRAPH_SIZE; ++k)
-                    received[k] = 0;
+                {
+                    receivers[k] = 0;
+                    nonReceivers[k] = k;
+                }
+                receiverCount = 0;
+                nonReceiverCount = 26;
 
-                reach(visibility, a1, received);
-                for (k = 0; k < GRAPH_SIZE; ++k)
-                    if (received[k] && k != a1)
-                        messages[k][messageCount[k]++] = messageStore[msc];
+                reach(visibility, a1, a1, receivers, &receiverCount, 
+                    nonReceivers, &nonReceiverCount);
+                for (k = 1; k < receiverCount; ++k)
+                    messages[receivers[k]][messageCount[receivers[k]]++] = messageStore[msc];
                 msc += 1;
             }
         }
